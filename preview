@@ -1,0 +1,20 @@
+#!/bin/zsh
+
+date="$(echo "$@" | awk -F '\t' '{print $1}')"
+src="$(echo  "$@" | awk -F '\t' '{print $2}')"
+
+dest="$(
+cat ~/.gomi/log \
+    | ltsv 'key("date")=="'$date'" && key("src")=="'$src'"{print key("dest")}'
+)"
+
+if [[ -d $dest ]]; then
+    tree -C "$dest"
+else
+    if file "$dest" | grep -q text; then
+        # pygmentize -g "$dest" 2>/dev/null || less "$dest"
+        highlight -O ansi -l "$dest" 2>/dev/null || less "$dest"
+    else
+        file "$dest"
+    fi
+fi

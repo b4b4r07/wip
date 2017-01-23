@@ -1,0 +1,23 @@
+#autoload
+#!zsh
+
+gomi_log="$HOME/.gomi/log"
+
+export PATH="$PATH:$PWD"
+
+lines="$(
+cat "$gomi_log" \
+    | ltsv 'BEGIN{OFS="\t"}{print key("date"), key("src")}' \
+    | fzf --preview="preview {}"
+)"
+
+for line in "${(@f)lines[@]}"
+do
+    date="$(echo "$line" | awk -F '\t' '{print $1}')"
+    src="$(echo  "$line" | awk -F '\t' '{print $2}')"
+    dest="$(
+    cat "$gomi_log" \
+        | ltsv 'key("date")=="'$date'" && key("src")=="'$src'"{print key("dest")}'
+    )"
+    echo "cp $dest $src"
+done
